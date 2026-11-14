@@ -3,8 +3,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root, so `seed` imports
 
-from app.engine import taxonomy as t  # noqa: E402
-from seed.golden import build_golden  # noqa: E402
+from app.engine import taxonomy as t
+
+from seed.golden import build_golden
 
 
 def test_golden_records_build_and_are_canonical():
