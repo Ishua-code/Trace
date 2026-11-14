@@ -35,7 +35,13 @@ EXPECTED = {
 
 def build_golden():
     from app.contracts import (
-        ActionPlan, AuditType, Evidence, NC, NCStatus, Severity, Verification,
+        NC,
+        ActionPlan,
+        AuditType,
+        Evidence,
+        NCStatus,
+        Severity,
+        Verification,
     )
 
     ncs = [
