@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session
 from app.auth import ALGORITHM, _secret, bearer
 from app.db import get_db
 from app.seed_loader import reset_and_load
+from app.auth import require_role
+from app.services.events import verify_chain
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -51,3 +53,7 @@ def reset_demo(seed: int | None = None, db: Session = Depends(get_db)) -> dict:
     t0 = time.perf_counter()
     counts = reset_and_load(db, _bundle(seed))
     return {"status": "ok", "seconds": round(time.perf_counter() - t0, 2), "loaded": counts}
+
+@router.get("/verify-chain", dependencies=[Depends(require_role("admin", "auditing_head"))])
+def verify(db: Session = Depends(get_db)) -> dict:
+    return verify_chain(db)
