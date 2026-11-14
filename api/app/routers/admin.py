@@ -30,14 +30,11 @@ def require_admin_token(x_admin_token: str | None = Header(default=None)) -> Non
 
 def _bundle(seed: int | None):
     # seed/ lives at the repo root; make it importable (works locally and if Vercel ships it)
-    root = str(Path(__file__).resolve().parents[3])
+    root = ...
     if root not in sys.path:
         sys.path.insert(0, root)
     try:
         from seed.generate import SEED_DEFAULT, generate
-    except ModuleNotFoundError as exc:  # pragma: no cover
-        raise HTTPException(500, f"seed package not available in this deployment: {exc}") from exc
-    return generate(SEED_DEFAULT if seed is None else seed)
 
 
 @router.post("/reset-demo", dependencies=[Depends(require_admin_token)])
