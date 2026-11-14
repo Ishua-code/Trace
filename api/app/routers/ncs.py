@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app import models as m
 from app.auth import get_current_user
 from app.db import get_db
+from app.services.events import log_event
 from app.services.nc_state import check_transition, next_states
 
 router = APIRouter(prefix="/api/ncs", tags=["ncs"])
@@ -37,5 +38,6 @@ def change_status(nc_id: str, body: StatusIn, db: Session = Depends(get_db),
     check_transition(nc.status, body.status, user.role)
     old = nc.status
     nc.status = body.status
+    log_event(db, "nc.status_changed", user.id, {"nc_id": nc.id, "from": old, "to": body.status})
     db.commit()
     return {"id": nc.id, "from": old, "to": nc.status}
