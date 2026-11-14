@@ -5,14 +5,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-import pytest  # noqa: E402
+import pytest
+from seed.golden import build_golden
 
-from app.contracts import Link, Signal, TraceEngine  # noqa: E402
-from app.engine.clock import FixedClock, SystemClock  # noqa: E402
-from app.engine.core import TraceEngineImpl  # noqa: E402
-from app.engine.store import InMemoryStore, NCStore, is_unresolved, pair_key  # noqa: E402
-from app.engine.types import WeightUpdate  # noqa: E402
-from seed.golden import build_golden  # noqa: E402
+from app.contracts import Link, Signal, TraceEngine
+from app.engine.clock import FixedClock, SystemClock
+from app.engine.core import TraceEngineImpl
+from app.engine.store import InMemoryStore, NCStore, is_unresolved, pair_key
+from app.engine.types import WeightUpdate
 
 
 def _link(a, b, score=0.8):

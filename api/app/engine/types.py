@@ -6,7 +6,6 @@ Until then they live here so the engine and the UI mocks can move.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -19,8 +18,8 @@ class GraphNode(BaseModel):
     status: NCStatus
     severity: Severity
     product: str
-    line: Optional[str] = None
-    cluster_id: Optional[str] = None
+    line: str | None = None
+    cluster_id: str | None = None
     age_days: int
 
 
@@ -28,8 +27,8 @@ class GraphEdge(BaseModel):
     a: str
     b: str
     score: float
-    link_id: Optional[int] = None
-    confirmed: Optional[bool] = None
+    link_id: int | None = None
+    confirmed: bool | None = None
 
 
 class FailurePath(BaseModel):
@@ -40,7 +39,7 @@ class FailurePath(BaseModel):
 
 
 class Graph(BaseModel):
-    focus_nc: Optional[str] = None
+    focus_nc: str | None = None
     nodes: list[GraphNode]
     edges: list[GraphEdge]
     clusters: dict[str, list[str]] = Field(default_factory=dict, description="cluster id -> NC ids")

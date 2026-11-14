@@ -6,9 +6,9 @@ implements NCStore on Postgres; seed, tests and eval use InMemoryStore.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
-from app.contracts import ActionPlan, Evidence, Link, NC, NCStatus, Verification
+from app.contracts import NC, ActionPlan, Evidence, Link, NCStatus, Verification
 from app.engine.types import WeightUpdate
 
 
@@ -26,15 +26,15 @@ def is_unresolved(nc: NC) -> bool:
 
 @runtime_checkable
 class NCStore(Protocol):
-    def get_nc(self, nc_id: str) -> Optional[NC]: ...
+    def get_nc(self, nc_id: str) -> NC | None: ...
     def list_ncs(self) -> list[NC]: ...
     def get_actions(self, nc_id: str) -> list[ActionPlan]: ...
-    def get_action_scope_lines(self, nc_id: str) -> Optional[list[str]]: ...
+    def get_action_scope_lines(self, nc_id: str) -> list[str] | None: ...
     def get_evidence(self, nc_id: str) -> list[Evidence]: ...
     def get_verifications(self, nc_id: str) -> list[Verification]: ...
     def get_links(self, nc_id: str) -> list[Link]: ...
     def save_links(self, nc_id: str, links: list[Link]) -> list[Link]: ...
-    def get_link(self, link_id: int) -> Optional[Link]: ...
+    def get_link(self, link_id: int) -> Link | None: ...
     def set_link_confirmed(self, link_id: int, confirmed: bool) -> None: ...
     def get_weight_deltas(self) -> dict[str, float]: ...
     def save_weight_update(self, update: WeightUpdate, new_deltas: dict[str, float]) -> None: ...
@@ -50,7 +50,7 @@ class InMemoryStore:
         action_plans=(),
         evidence=(),
         verifications=(),
-        action_scope: Optional[dict[str, list[str]]] = None,
+        action_scope: dict[str, list[str]] | None = None,
     ) -> None:
         self._ncs: dict[str, NC] = {n.id: n for n in ncs}
         self._actions = self._group(action_plans)
@@ -71,14 +71,14 @@ class InMemoryStore:
         return out
 
     @classmethod
-    def from_seed_data(cls, data: dict[str, Any]) -> "InMemoryStore":
+    def from_seed_data(cls, data: dict[str, Any]) -> InMemoryStore:
         return cls(
             data["ncs"], data["action_plans"], data["evidence"],
             data["verifications"], data.get("action_scope"),
         )
 
     # ---- reads
-    def get_nc(self, nc_id: str) -> Optional[NC]:
+    def get_nc(self, nc_id: str) -> NC | None:
         return self._ncs.get(nc_id)
 
     def list_ncs(self) -> list[NC]:
@@ -87,7 +87,7 @@ class InMemoryStore:
     def get_actions(self, nc_id: str) -> list[ActionPlan]:
         return list(self._actions.get(nc_id, []))
 
-    def get_action_scope_lines(self, nc_id: str) -> Optional[list[str]]:
+    def get_action_scope_lines(self, nc_id: str) -> list[str] | None:
         lines = self._scope.get(nc_id)
         return list(lines) if lines is not None else None
 
@@ -146,7 +146,7 @@ class InMemoryStore:
             saved.append(stored.model_copy(deep=True))
         return saved
 
-    def get_link(self, link_id: int) -> Optional[Link]:
+    def get_link(self, link_id: int) -> Link | None:
         key = self._key_by_id.get(link_id)
         return self._links[key].model_copy(deep=True) if key else None
 
@@ -168,7 +168,7 @@ class InMemoryStore:
         return list(self._updates)
 
     # ---- time travel (used by eval replay)
-    def snapshot_as_of(self, when: datetime) -> "InMemoryStore":
+    def snapshot_as_of(self, when: datetime) -> InMemoryStore:
         """A fresh store showing only what existed at `when`, with no stored links.
 
         Guarantees OPEN vs CLOSED is right as of `when`. Other workflow states are
