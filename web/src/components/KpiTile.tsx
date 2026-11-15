@@ -23,7 +23,7 @@ function useCountUp(target: number, duration = 1200, animate = true) {
   const [current, setCurrent] = useState(animate ? 0 : target);
   const raf = useRef<number | null>(null);
   useEffect(() => {
-    if (!animate) { setCurrent(target); return; }
+    if (!animate) return;
     const start = performance.now();
     const step = (now: number) => {
       const pct = Math.min((now - start) / duration, 1);
@@ -34,7 +34,7 @@ function useCountUp(target: number, duration = 1200, animate = true) {
     raf.current = requestAnimationFrame(step);
     return () => { if (raf.current) cancelAnimationFrame(raf.current); };
   }, [target, duration, animate]);
-  return current;
+  return animate ? current : target;
 }
 
 export function KpiTile({

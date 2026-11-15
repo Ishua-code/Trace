@@ -1,5 +1,6 @@
 "use client";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePersona } from "@/lib/persona";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -19,6 +20,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 export function Header({ title }: HeaderProps) {
   const { user, users, setUser } = usePersona();
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-slate-950/80 px-3 backdrop-blur sm:px-6">
@@ -29,6 +31,14 @@ export function Header({ title }: HeaderProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          aria-label="Toggle light or dark theme"
+          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+        >
+          <Sun size={16} />
+        </button>
         {/* Persona switcher */}
         <details className="group relative">
           <summary

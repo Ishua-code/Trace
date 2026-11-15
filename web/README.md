@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TRACE web
 
-## Getting Started
+Next.js App Router frontend for the TRACE audit workflow. The current repo scaffold uses Next.js 16, React 19, TypeScript, Tailwind CSS 4, Recharts, and `@xyflow/react` (React Flow).
 
-First, run the development server:
+## Local development
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+MSW starts in the browser by default when `NEXT_PUBLIC_API_URL` is unset. The mock handlers use clearly labelled synthetic data from `src/lib/mock-data.ts`. Set `NEXT_PUBLIC_API_URL` to a FastAPI origin to bypass MSW and call that service.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API types
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`src/lib/generated/api-schema.d.ts` is generated from `../docs/openapi.json`:
 
-## Learn More
+```bash
+npm run api:types
+```
 
-To learn more about Next.js, take a look at the following resources:
+That OpenAPI snapshot currently contains health, taxonomy, and demo-reset endpoints. Workflow UI endpoints outside the snapshot use the frozen TypeScript mirror in `src/lib/types.ts` and MSW demo handlers until the backend publishes them.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Shared UI
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Shared components are in `src/components` (`KpiTile`, `StatusBadge`, `DataTable`, `Timeline`, `EmptyState`, skeletons, and `useToast`). The shadcn-compatible component configuration is `components.json`; common Card primitives are in `src/components/ui/card.tsx`.

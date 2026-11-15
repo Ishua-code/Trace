@@ -1,8 +1,16 @@
 /**
- * Typed API client — calls NEXT_PUBLIC_API_URL.
- * Falls back to mock data when NEXT_PUBLIC_API_URL is not set (dev with MSW).
+ * API helpers. Endpoints present in docs/openapi.json use generated response types;
+ * workflow endpoints use the frozen Pydantic mirror until they land in OpenAPI.
  */
+import type { paths } from "./generated/api-schema";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+type Json200<Operation> = Operation extends {
+  responses: { 200: { content: { "application/json": infer Response } } };
+} ? Response : never;
+type TaxonomyResponse = Json200<paths["/api/taxonomy"]["get"]>;
+type ResetDemoResponse = Json200<paths["/api/admin/reset-demo"]["post"]>;
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { next: { revalidate: 30 } });
@@ -10,11 +18,13 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function post<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    ...(body === undefined ? {} : {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
   });
   if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
   return res.json() as Promise<T>;
@@ -31,7 +41,8 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const api = {
-  health: () => get<{ status: string }>("/api/health"),
+  health: () => get<Json200<paths["/api/health"]["get"]>>("/api/health"),
+  taxonomy: () => get<TaxonomyResponse>("/api/taxonomy"),
 
   // KPIs
   kpi: () => get<import("./types").KPIOverview>("/api/kpi"),
@@ -66,14 +77,14 @@ export const api = {
   auditLog: (limit = 50) =>
     get<import("./types").EventLogEntry[]>(`/api/audit-log?limit=${limit}`),
   verifyChain: () =>
-    get<import("./types").ChainVerification>("/api/audit-log/verify"),
+    get<import("./types").ChainVerification>("/api/admin/verify-chain"),
 
   // Notifications
   notifications: (userId: number) =>
     get<import("./types").Notification[]>(`/api/notifications?user_id=${userId}`),
 
   // Admin
-  resetDemo: () => post<{ ok: boolean }>("/api/admin/reset-demo", {}),
+  resetDemo: () => post<ResetDemoResponse>("/api/admin/reset-demo"),
 
   // Eval / proof
   evalResults: () => get<unknown>("/api/eval/results"),

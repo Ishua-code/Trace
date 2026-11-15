@@ -34,6 +34,12 @@
   --duration-fast: 150ms;
   --duration-normal: 200ms;
   --duration-slow: 300ms;
+
+  /* Shared industrial type scale */
+  --text-kicker: 0.6875rem;
+  --text-kicker--line-height: 1rem;
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.25rem;
 }
 
 /* =====================================================================
@@ -42,6 +48,29 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --color-electric: #00e5ff;
+    --color-bg-base: #020409;
+    --color-bg-surface: #0a0f1e;
+    --color-bg-elevated: #0f1629;
+  }
+
+  .light {
+    color-scheme: light;
+    --color-electric: #087e91;
+    --color-electric-dim: #0b7181;
+    --color-bg-base: #f1f5f9;
+    --color-bg-surface: #ffffff;
+    --color-bg-elevated: #e2e8f0;
+    --color-slate-950: #f8fafc;
+    --color-slate-900: #ffffff;
+    --color-slate-800: #e2e8f0;
+    --color-slate-700: #cbd5e1;
+    --color-slate-600: #475569;
+    --color-slate-500: #64748b;
+    --color-slate-400: #475569;
+    --color-slate-300: #334155;
+    --color-slate-200: #1e293b;
+    --color-slate-100: #0f172a;
   }
 
   html {
@@ -52,9 +81,23 @@
   }
 
   body {
-    background-color: #020409;
+    background-color: var(--color-bg-base);
     color: #e2e8f0;
     min-height: 100dvh;
+  }
+
+  .light body { color: #0f172a; }
+  .light .text-white { color: #0f172a; }
+  .light [class*="bg-red-"] { color: #fff; }
+  .light [class*="border-white/"] { border-color: rgb(15 23 42 / 12%) !important; }
+  .light .glass {
+    background: rgb(255 255 255 / 88%);
+    border-color: rgb(15 23 42 / 10%);
+    box-shadow: 0 8px 24px rgb(15 23 42 / 5%);
+  }
+  .light .bg-grid {
+    background-image: linear-gradient(rgb(15 23 42 / 4%) 1px, transparent 1px),
+                      linear-gradient(90deg, rgb(15 23 42 / 4%) 1px, transparent 1px);
   }
 
   /* Custom scrollbar */

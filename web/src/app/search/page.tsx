@@ -211,7 +211,7 @@ export default function SearchPage() {
                           >
                             {e.event_type.replace(/_/g, " ")}
                           </span>
-                          {e.payload.nc_id && (
+                          {typeof e.payload.nc_id === "string" && (
                             <Link href={`/ncs/${String(e.payload.nc_id)}`} className="font-mono text-xs text-electric hover:underline">
                               {String(e.payload.nc_id)}
                             </Link>

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { PersonaProvider } from "@/lib/persona";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { AppProviders } from "@/components/AppProviders";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body>
-        <PersonaProvider>
+        <AppProviders>
           <div className="flex h-screen overflow-hidden">
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </main>
             </div>
           </div>
-        </PersonaProvider>
+        </AppProviders>
       </body>
     </html>
   );
