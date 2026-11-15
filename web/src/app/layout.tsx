@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Header />
               <main
                 id="main-content"
-                className="flex-1 overflow-y-auto bg-grid p-6"
+                className="flex-1 overflow-y-auto bg-grid p-4 sm:p-6"
                 role="main"
               >
                 {children}
