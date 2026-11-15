@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
-import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from "@radix-ui/react-dialog";
 import {
   AlertTriangle,
   BarChart3,
@@ -62,36 +68,43 @@ export function CommandPalette() {
         <kbd className="hidden rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-500 sm:inline">⌘K</kbd>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-[99] bg-black/65 backdrop-blur-sm" />
+        <DialogPortal>
+          <DialogOverlay className="fixed inset-0 z-[99] bg-black/65 backdrop-blur-sm" />
           <DialogContent className="fixed left-1/2 top-[18%] z-[100] w-[min(92vw,36rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-slate-950 p-0 shadow-2xl shadow-black/60">
             <DialogTitle className="sr-only">Navigate TRACE</DialogTitle>
             <Command label="Navigate TRACE" className="text-slate-200">
-            <Command.Input
-              autoFocus
-              placeholder="Search pages…"
-              className="h-12 w-full border-b border-white/10 bg-transparent px-4 text-sm text-white outline-none placeholder:text-slate-500"
-            />
-            <Command.List className="max-h-[min(60vh,24rem)] overflow-y-auto p-2">
-              <Command.Empty className="px-3 py-8 text-center text-sm text-slate-500">No matching pages.</Command.Empty>
-              <Command.Group heading="Go to" className="px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-2">
-                {COMMANDS.map(({ label, href, icon: Icon }) => (
-                  <Command.Item
-                    key={href}
-                    value={label}
-                    onSelect={() => navigate(href)}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 aria-selected:bg-electric/10 aria-selected:text-electric"
-                  >
-                    <Icon size={15} aria-hidden="true" />
-                    {label}
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            </Command.List>
-            <div className="border-t border-white/10 px-4 py-2 text-[10px] text-slate-500">↑↓ to navigate · Enter to open · Esc to close</div>
+              <Command.Input
+                autoFocus
+                placeholder="Search pages…"
+                className="h-12 w-full border-b border-white/10 bg-transparent px-4 text-sm text-white outline-none placeholder:text-slate-500"
+              />
+              <Command.List className="max-h-[min(60vh,24rem)] overflow-y-auto p-2">
+                <Command.Empty className="px-3 py-8 text-center text-sm text-slate-500">
+                  No matching pages.
+                </Command.Empty>
+                <Command.Group
+                  heading="Go to"
+                  className="px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-2"
+                >
+                  {COMMANDS.map(({ label, href, icon: Icon }) => (
+                    <Command.Item
+                      key={href}
+                      value={label}
+                      onSelect={() => navigate(href)}
+                      className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 aria-selected:bg-electric/10 aria-selected:text-electric"
+                    >
+                      <Icon size={15} aria-hidden="true" />
+                      {label}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              </Command.List>
+              <div className="border-t border-white/10 px-4 py-2 text-[10px] text-slate-500">
+                ↑↓ to navigate · Enter to open · Esc to close
+              </div>
             </Command>
           </DialogContent>
-        </Dialog.Portal>
+        </DialogPortal>
       </Dialog>
     </>
   );
