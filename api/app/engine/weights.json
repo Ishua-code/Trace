@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "bias": -16.671539,
+  "threshold": 0.9614,
+  "weights": {
+    "same_product": 1.242392,
+    "same_line": -0.684895,
+    "same_process": -0.660136,
+    "same_department": 0.96004,
+    "same_root_cause": 9.598894,
+    "same_defect_code": 9.562872,
+    "same_machine": 0.586744,
+    "same_lot": 2.904586,
+    "time_proximity": 1.139387,
+    "tfidf_cosine": 0.0,
+    "char_similarity": 0.0,
+    "glossary_overlap": 0.0
+  },
+  "meta": {
+    "trained_on_split": "dev",
+    "excluded_splits": [
+      "test",
+      "golden"
+    ],
+    "n_pairs": 87990,
+    "n_positive": 122,
+    "l2": 1.0,
+    "class_weighting": "balanced",
+    "seed": 42,
+    "fit_date": "2026-11-15",
+    "dev_in_sample_precision": 0.623,
+    "dev_in_sample_recall": 0.3115,
+    "dev_in_sample_f1": 0.4153,
+    "score_note": "Relative link score, not a calibrated probability",
+    "non_negative": false,
+    "dev_idf_sha256": "40504f3c9276a8bccd52f0703dac5d5738b98bdfaaf7f3c9c08643605e88760d",
+    "dev_ids_sha256": "9645cbef7bcf878a58592adc90dd64a0f66f38f88e9cd143d838f38aedfa523e",
+    "kkt": null,
+    "features": [
+      "same_product",
+      "same_line",
+      "same_process",
+      "same_department",
+      "same_root_cause",
+      "same_defect_code",
+      "same_machine",
+      "same_lot",
+      "time_proximity"
+    ],
+    "threshold_source": "grouped_5_fold_oof_recall_target",
+    "threshold_recall_target": 0.7,
+    "threshold_oof_recall": 0.7049,
+    "threshold_oof_precision": 0.0717,
+    "threshold_oof_links_per_nc": 5.714,
+    "threshold_scale_shift_logit": 0.2241
+  }
+}

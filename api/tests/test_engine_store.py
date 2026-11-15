@@ -6,13 +6,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pytest
-from seed.golden import build_golden
-
 from app.contracts import Link, Signal, TraceEngine
 from app.engine.clock import FixedClock, SystemClock
 from app.engine.core import TraceEngineImpl
 from app.engine.store import InMemoryStore, NCStore, is_unresolved, pair_key
 from app.engine.types import WeightUpdate
+
+from seed.golden import build_golden
 
 
 def _link(a, b, score=0.8):
