@@ -115,6 +115,29 @@ def select_threshold(scores, y, plateau: float = 0.01) -> dict:
             "plateau_low": low_t, "plateau_high": high_t}
 
 
+def threshold_for_recall(scores, y, target: float) -> dict:
+    """Pre-committed rule: the highest threshold whose recall reaches `target`.
+
+    Candidates are observed scores, so there is no cap. The threshold returned is the logit-space
+    midpoint of the gap between that score and the next lower observed one, so it flags exactly
+    the pairs at or above that score and sits as far from both neighbours as possible.
+    """
+    if not 0.0 < target <= 1.0:
+        raise ValueError("target recall must be in (0, 1]")
+    thr, _, recall, _ = _curve(scores, y)
+    i = int(np.argmax(recall >= target - 1e-12))
+    high_t = float(thr[i])
+    low_t = float(thr[i + 1]) if i + 1 < len(thr) else high_t
+    if low_t >= high_t:
+        chosen = high_t
+    else:
+        chosen = min(_sigmoid((_logit(high_t) + _logit(low_t)) / 2.0), high_t)
+    op = operating_point(scores, y, chosen)
+    return {"threshold": chosen, "target": float(target), "recall": op["recall"],
+            "precision": op["precision"], "n_flagged": op["n_flagged"],
+            "score_at_target": high_t, "next_lower_score": low_t}
+
+
 def per_nc_report(S, Y, ks=(1, 3, 5), threshold: float | None = None) -> dict:
     """Per-NC retrieval quality from a dense symmetric score matrix.
 
