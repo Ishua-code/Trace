@@ -19,6 +19,7 @@
 
 # production
 /build
+/public/msw-client.js
 
 # misc
 .DS_Store

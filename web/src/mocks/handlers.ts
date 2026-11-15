@@ -5,7 +5,7 @@ import {
   MOCK_KPI,
   MOCK_NCS,
   MOCK_NOTIFICATIONS,
-} from "@/lib/mock-data";
+} from "../lib/mock-data";
 
 const taxonomy = {
   products: ["Brake Drum Assy", "Hub Flange", "Wheel Hub", "Axle Shaft"],

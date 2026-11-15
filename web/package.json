@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run build:msw",
     "dev": "next dev",
+    "prebuild": "npm run build:msw",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "build:msw": "esbuild src/mocks/client-entry.ts --bundle --format=iife --global-name=TraceMsw --outfile=public/msw-client.js --platform=browser --target=es2020",
     "api:types": "openapi-typescript ../docs/openapi.json -o src/lib/generated/api-schema.d.ts"
   },
   "dependencies": {
@@ -44,9 +47,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
-    "msw": "^3.0.6",
+    "msw": "^2.15.0",
     "openapi-typescript": "^7.13.0",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
