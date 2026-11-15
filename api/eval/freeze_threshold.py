@@ -19,11 +19,11 @@ sys.path.insert(0, str(ROOT / "api"))
 sys.path.insert(0, str(ROOT))
 
 from app.engine.scoring import WEIGHTS_PATH
+from seed.generate import generate
 
 from eval.cv import build_dev_pairs, check_folds, make_folds
 from eval.metrics import threshold_for_recall
 from eval.validate_cv import validate_model
-from seed.generate import generate
 
 THRESHOLD_SOURCE = "grouped_5_fold_oof_recall_target"
 

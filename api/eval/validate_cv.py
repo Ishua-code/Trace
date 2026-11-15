@@ -23,6 +23,7 @@ from app.engine.logreg import (
     fit_logistic_nonneg,
     predict_proba,
 )
+from seed.generate import SEED_DEFAULT, generate
 
 from eval.cv import build_dev_pairs, check_folds, fold_arrays, make_folds
 from eval.frozen_idf import dev_ncs
@@ -34,7 +35,6 @@ from eval.metrics import (
     roc_auc,
     select_threshold,
 )
-from seed.generate import SEED_DEFAULT, generate
 
 FEATURE_SETS = {
     "structural": STRUCTURAL_FEATURES,
