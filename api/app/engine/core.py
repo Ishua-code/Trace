@@ -6,8 +6,10 @@ from pathlib import Path
 from app.contracts import ClosureReport, Link, Recommendation
 from app.engine.clock import Clock, SystemClock
 from app.engine.features import FeatureIndex, FrozenIdf
+from app.engine.graph import DEFAULT_MAX_HOPS, build_graph
 from app.engine.scoring import FrozenWeights, LinkScorer, load_weights
 from app.engine.store import NCStore
+from app.engine.types import Graph
 
 IDF_PATH = Path(__file__).with_name("idf.json")
 class TraceEngineImpl:
@@ -78,6 +80,10 @@ class TraceEngineImpl:
         if self.store.get_nc(nc_id) is None:
             raise KeyError(nc_id)
         return self.store.get_links(nc_id)
+
+    def get_graph(self, nc_id: str, max_hops: int = DEFAULT_MAX_HOPS) -> Graph:
+        """Linked NCs, failure paths and footprint around one NC (KeyError if unknown)."""
+        return build_graph(self.store, nc_id, self.clock.now(), max_hops)
 
     def simulate_closure(self, nc_id: str) -> ClosureReport:
         raise NotImplementedError("Step 8: rules and verdict")
