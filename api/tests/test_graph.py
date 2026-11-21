@@ -222,7 +222,13 @@ def test_golden_graph_from_the_engine():
     assert set(targets) == {"NC-0377"}  # NC-0390 is already closed
     assert targets["NC-0377"].hops == ["NC-0412", "NC-0377"]
     assert "Brake Drum" in g.footprint["products"] and "Line 4" in g.footprint["lines"]
-
+    assert targets["NC-0377"].scores == [0.8307]
+    assert g.footprint == {
+        "products": ["Brake Drum"],
+        "lines": ["Line 2", "Line 4"],
+        "processes": ["Bore Machining"],
+        "departments": [DEPARTMENTS[2]],
+    }
 
 def test_engine_get_graph_unknown_nc():
     with pytest.raises(KeyError):
