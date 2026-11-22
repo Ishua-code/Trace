@@ -1,5 +1,4 @@
-import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Risk Plan Heatmap" };
+"use client";
 import { MOCK_NCS } from "@/lib/mock-data";
 
 const MONTHS = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
