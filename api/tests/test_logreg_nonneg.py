@@ -2,7 +2,6 @@ import inspect
 
 import numpy as np
 import pytest
-
 from app.engine import logreg
 from app.engine.logreg import fit_logistic, fit_logistic_nonneg, kkt_violation, sigmoid
 
