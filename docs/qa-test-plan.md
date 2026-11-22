@@ -7,9 +7,9 @@
 | Project | TRACE – Digital Product Audit and Revalidation Audit Management Dashboard |
 | Document | QA Test Plan |
 | Prepared by | Shamini |
-| Date | 14 November 2026 |
-| Version | 1.0 |
-| Status | Test plan prepared; execution pending |
+| Date | 22 November 2026 |
+| Version | 1.1 |
+| Status | Automated QA executed; lint issues and integration testing remain |
 
 ## 2. Objective
 
@@ -458,3 +458,62 @@ Limitations:
 - Functional UI test cases remain NOT RUN unless separately executed.
 ---
 End of QA Test Plan
+## 12. Latest QA Execution Results - 22 November 2026
+
+### Backend Automated Tests
+
+| Metric | Result |
+|---|---|
+| Test framework | Pytest |
+| Tests collected | 225 |
+| Passed | 225 |
+| Failed | 0 |
+| Warnings | 2 |
+| Result | PASS |
+
+Notes:
+- A temporary placeholder PostgreSQL URL was used for database engine initialization during test execution.
+- The test run does not establish successful connectivity to a live PostgreSQL or Supabase database.
+- Two PyJWT InsecureKeyLengthWarning messages were reported because the test secret is shorter than the recommended 32 bytes.
+
+### Frontend Production Build
+
+| Check | Result |
+|---|---|
+| Dependency installation (`npm ci`) | Completed |
+| MSW bundle generation | Successful |
+| Next.js production build | Successful |
+| TypeScript validation during build | Passed |
+| Static page generation | 15/15 generated |
+| Result | PASS |
+
+### Frontend Lint
+
+| Metric | Result |
+|---|---|
+| Errors | 19 |
+| Warnings | 56 |
+| Result | FAIL |
+
+Error categories:
+- 17 `@typescript-eslint/no-explicit-any` errors in `src/app/ncs/[id]/page.tsx` and `src/lib/api.ts`.
+- 2 `react-hooks/set-state-in-effect` errors in `src/app/ncs/NCsClient.tsx` and `src/lib/persona.tsx`.
+
+These findings are recorded for the development team. They have not been modified as part of this QA contribution.
+
+### Testing Limitations and Pending Work
+
+- Live Supabase/PostgreSQL integration testing has not been verified.
+- Manual browser-based functional testing remains pending.
+- Playwright end-to-end testing has not been executed.
+- Authentication, role-based access, audit lifecycle and golden-scenario behaviour require separate functional verification.
+- Frontend lint errors require developer review and resolution.
+
+### Overall QA Assessment
+
+The backend automated test suite passed, and the frontend production build completed successfully. However, frontend lint errors remain, and live database integration and manual functional testing are pending.
+
+This execution record does not mark unexecuted functional test cases as PASS.
+
+---
+End of Latest QA Execution Record
