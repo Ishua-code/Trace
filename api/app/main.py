@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import admin, auth, closure, kpis, ncs, ncs_lifecycle, taxonomy
+from app.routers import admin, auth, closure, kpis, ncs, ncs_lifecycle, reindex, taxonomy
 
 app = FastAPI(title="TRACE API")
 app.include_router(taxonomy.router)
@@ -10,6 +10,7 @@ app.include_router(ncs.router)
 app.include_router(ncs_lifecycle.router)
 app.include_router(closure.router)
 app.include_router(kpis.router)
+app.include_router(reindex.router)
 
 
 @app.get("/api/health")
