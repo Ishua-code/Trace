@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import admin, auth, closure, jobs, kpis, ncs, ncs_lifecycle, reindex, taxonomy
+from app.routers import admin, auth, closure, jobs, audit_log, kpis, ncs, ncs_lifecycle, reindex, taxonomy
 
 app = FastAPI(title="TRACE API")
 
@@ -23,6 +23,7 @@ app.include_router(closure.router)
 app.include_router(kpis.router)
 app.include_router(reindex.router)
 app.include_router(jobs.router)
+app.include_router(audit_log.router)
 
 
 @app.get("/api/health")
