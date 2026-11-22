@@ -1,7 +1,3 @@
-/**
- * API helpers. Endpoints present in docs/openapi.json use generated response types;
- * workflow endpoints use the frozen Pydantic mirror until they land in OpenAPI.
- */
 import type { paths } from "./generated/api-schema";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -12,90 +8,63 @@ type Json200<Operation> = Operation extends {
 type TaxonomyResponse = Json200<paths["/api/taxonomy"]["get"]>;
 type ResetDemoResponse = Json200<paths["/api/admin/reset-demo"]["post"]>;
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 30 } });
-  if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-  return res.json() as Promise<T>;
+let TOKEN = "";
+export function setToken(t: string) {
+  TOKEN = t;
 }
 
-async function post<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method: "POST",
-    ...(body === undefined ? {} : {
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }),
-  });
-  if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
-  return res.json() as Promise<T>;
+function headers(json = false): Record<string, string> {
+  const h: Record<string, string> = {};
+  if (json) h["Content-Type"] = "application/json";
+  if (TOKEN) h["Authorization"] = `Bearer ${TOKEN}`;
+  return h;
 }
 
-async function patch<T>(path: string, body: unknown): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    method,
+    cache: "no-store",
+    headers: headers(body !== undefined),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
-  if (!res.ok) throw new Error(`API ${path} → ${res.status}`);
+  if (!res.ok) throw new Error(`API ${path} -> ${res.status}`);
   return res.json() as Promise<T>;
 }
+const get = <T,>(p: string) => request<T>("GET", p);
+const post = <T,>(p: string, b?: unknown) => request<T>("POST", p, b);
+const patch = <T,>(p: string, b: unknown) => request<T>("PATCH", p, b);
 
 export const api = {
   health: () => get<Json200<paths["/api/health"]["get"]>>("/api/health"),
   taxonomy: () => get<TaxonomyResponse>("/api/taxonomy"),
 
-  // KPIs
-  kpi: () => get<import("./types").KPIOverview>("/api/kpi"),
-  effortSaved: () => get<import("./types").EffortSaved[]>("/api/kpi/effort-saved"),
+  // Auth
+  personas: () => get<unknown[]>("/api/auth/personas"),
+  login: (userId: number) =>
+    post<{ access_token: string; user: unknown }>("/api/auth/login", { user_id: userId }),
 
-  // NCs
-  ncList: (params?: { status?: string; severity?: string }) => {
+  // KPIs
+  kpi: () => get<import("./types").KPIOverview>("/api/kpis/overview"),
+
+  // NCs (API returns {total, items}; we return the items array)
+  ncList: async (params?: { status?: string; severity?: string }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
-    return get<import("./types").NC[]>(`/api/ncs${qs ? `?${qs}` : ""}`);
+    const r = await get<{ total: number; items: import("./types").NC[] }>(`/api/ncs${qs ? `?${qs}` : ""}`);
+    return r.items;
   },
-  ncDetail: (id: string) => get<import("./types").NC>(`/api/ncs/${id}`),
+  ncDetail: (id: string) => get<any>(`/api/ncs/${id}`),
   ncRaise: (payload: Partial<import("./types").NC>) =>
     post<import("./types").NC>("/api/ncs", payload),
 
-  // TRACE engine
-  findRelated: (ncId: string) =>
-    get<import("./types").Link[]>(`/api/engine/related/${ncId}`),
-  simulateClosure: (ncId: string) =>
-    get<import("./types").ClosureReport>(`/api/engine/simulate/${ncId}`),
-  planRisk: (month: string) =>
-    get<import("./types").Recommendation[]>(`/api/engine/plan-risk?month=${month}`),
-  recordFeedback: (linkId: number, confirmed: boolean) =>
-    post<void>("/api/engine/feedback", { link_id: linkId, confirmed }),
+  // Closure
+  simulateClosure: (ncId: string) => post<any>(`/api/ncs/${ncId}/closure/simulate`),
+  getClosure: (ncId: string) => get<any>(`/api/ncs/${ncId}/closure`),
+  closureDecision: (ncId: string, payload: unknown) =>
+    post<any>(`/api/ncs/${ncId}/closure/decision`, payload),
+  completeTask: (taskId: number) => patch<any>(`/api/tasks/${taskId}`, { done: true }),
 
-  // Approvals
-  pendingApprovals: () =>
-    get<import("./types").NC[]>("/api/approvals/pending"),
-  approve: (ncId: string, payload: { decision: string; justification?: string }) =>
-    post<import("./types").Approval>(`/api/approvals/${ncId}`, payload),
-
-  // Audit log
-  auditLog: (limit = 50) =>
-    get<import("./types").EventLogEntry[]>(`/api/audit-log?limit=${limit}`),
-  verifyChain: () =>
-    get<import("./types").ChainVerification>("/api/admin/verify-chain"),
-
-  // Notifications
-  notifications: (userId: number) =>
-    get<import("./types").Notification[]>(`/api/notifications?user_id=${userId}`),
-
-  // Admin
+  // Admin / outbox
+  outbox: () => get<any>("/api/outbox"),
+  verifyChain: () => get<any>("/api/admin/verify-chain"),
   resetDemo: () => post<ResetDemoResponse>("/api/admin/reset-demo"),
-
-  // Eval / proof
-  evalResults: () => get<unknown>("/api/eval/results"),
-
-  // Plan upload
-  uploadPlan: (formData: FormData) =>
-    fetch(`${BASE}/api/plans/upload`, { method: "POST", body: formData }).then(
-      (r) => r.json() as Promise<import("./types").PlanUploadResult>
-    ),
-
-  // Verification tasks
-  completeTask: (taskId: number) =>
-    patch<import("./types").VerificationTask>(`/api/tasks/${taskId}`, { done: true }),
 };
