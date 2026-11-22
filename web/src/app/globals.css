@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   TRACE Design System — globals.css
+   Industrial palette: deep slate + electric cyan + verdict colours
+   Tailwind v4 @theme custom properties
+   ===================================================================== */
+
+@theme {
+  /* Google Font — Inter */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Electric accent */
+  --color-electric: #00e5ff;
+  --color-electric-dim: #00b8d4;
+
+  /* Verdict colours */
+  --color-hold: #ef4444;
+  --color-verify: #f59e0b;
+  --color-clear: #10b981;
+
+  /* Background scale */
+  --color-bg-base: #020409;
+  --color-bg-surface: #0a0f1e;
+  --color-bg-elevated: #0f1629;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  /* Shared industrial type scale */
+  --text-kicker: 0.6875rem;
+  --text-kicker--line-height: 1rem;
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.25rem;
+}
+
+/* =====================================================================
+   Base styles
+   ===================================================================== */
+@layer base {
+  :root {
+    color-scheme: dark;
+    --color-electric: #00e5ff;
+    --color-bg-base: #020409;
+    --color-bg-surface: #0a0f1e;
+    --color-bg-elevated: #0f1629;
+  }
+
+  .light {
+    color-scheme: light;
+    --color-electric: #087e91;
+    --color-electric-dim: #0b7181;
+    --color-bg-base: #f1f5f9;
+    --color-bg-surface: #ffffff;
+    --color-bg-elevated: #e2e8f0;
+    --color-slate-950: #f8fafc;
+    --color-slate-900: #ffffff;
+    --color-slate-800: #e2e8f0;
+    --color-slate-700: #cbd5e1;
+    --color-slate-600: #475569;
+    --color-slate-500: #64748b;
+    --color-slate-400: #475569;
+    --color-slate-300: #334155;
+    --color-slate-200: #1e293b;
+    --color-slate-100: #0f172a;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg-base);
+    color: #e2e8f0;
+    min-height: 100dvh;
+  }
+
+  .light body { color: #0f172a; }
+  .light .text-white { color: #0f172a; }
+  .light [class*="bg-red-"] { color: #fff; }
+  .light [class*="border-white/"] { border-color: rgb(15 23 42 / 12%) !important; }
+  .light .glass {
+    background: rgb(255 255 255 / 88%);
+    border-color: rgb(15 23 42 / 10%);
+    box-shadow: 0 8px 24px rgb(15 23 42 / 5%);
+  }
+  .light .bg-grid {
+    background-image: linear-gradient(rgb(15 23 42 / 4%) 1px, transparent 1px),
+                      linear-gradient(90deg, rgb(15 23 42 / 4%) 1px, transparent 1px);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+
+  /* Focus ring consistent */
+  *:focus-visible {
+    outline: 2px solid #00e5ff;
+    outline-offset: 2px;
+  }
+}
+
+/* =====================================================================
+   Utility animations
+   ===================================================================== */
+@layer utilities {
+  /* Subtle glow for TRACE verdict panels */
+  .glow-hold {
+    box-shadow: 0 0 24px -4px rgba(239, 68, 68, 0.4);
+  }
+  .glow-verify {
+    box-shadow: 0 0 24px -4px rgba(245, 158, 11, 0.4);
+  }
+  .glow-clear {
+    box-shadow: 0 0 24px -4px rgba(16, 185, 129, 0.4);
+  }
+  .glow-electric {
+    box-shadow: 0 0 24px -4px rgba(0, 229, 255, 0.3);
+  }
+
+  /* Subtle grid background for hero sections */
+  .bg-grid {
+    background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Glassmorphism card */
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(15, 22, 41, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Fade in animation */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out both;
+  }
+
+  /* Pulse glow for active indicator */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Stagger children fade-in */
+  .stagger > * {
+    animation: fade-in 0.3s ease-out both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger > *:nth-child(6) { animation-delay: 300ms; }
+  .stagger > *:nth-child(7) { animation-delay: 360ms; }
+}
