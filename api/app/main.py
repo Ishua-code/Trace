@@ -1,8 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import admin, auth, closure, jobs, kpis, ncs, ncs_lifecycle, reindex, taxonomy
 
 app = FastAPI(title="TRACE API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(taxonomy.router)
 app.include_router(admin.router)
 app.include_router(auth.router)
