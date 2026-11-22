@@ -35,12 +35,6 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["admin", "auditing_head", "auditor", "auditee"],
   },
   {
-    href: "/schedule",
-    label: "Schedule",
-    icon: Calendar,
-    roles: ["admin", "auditing_head", "auditor"],
-  },
-  {
     href: "/ncs",
     label: "Non-Conformances",
     icon: AlertTriangle,
@@ -168,18 +162,6 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Bottom: settings */}
-      <div className="border-t border-white/5 px-1.5 py-3 sm:px-3">
-        <Link
-          href="/settings"
-          aria-label="Settings"
-          title="Settings"
-          className="flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-slate-500 hover:bg-slate-800/60 hover:text-slate-300 sm:justify-start sm:px-3"
-        >
-          <Settings size={16} />
-          <span className="hidden sm:inline">Settings</span>
-        </Link>
-      </div>
     </aside>
   );
 }
