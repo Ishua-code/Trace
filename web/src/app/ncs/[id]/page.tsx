@@ -40,7 +40,7 @@ export default function NCDetailPage({ params }: { params: Promise<{ id: string 
   async function decide(decision: "approve" | "override" | "send_back") {
     setBusy(true); setMsg("");
     try {
-      await api.closureDecision(id, { decision, justification: text, reason: text });
+      await api.closureDecision(id, { decision, justification: text });
       setText("");
       await load();
       setMsg("Decision saved.");
