@@ -1,16 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
-import { MOCK_NCS } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { usePersona } from "@/lib/persona";
 import { formatDate, daysOverdue } from "@/lib/utils";
 import type { NC } from "@/lib/types";
 import Link from "next/link";
 import { Plus, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STATUS_FILTERS = ["All", "OPEN", "IN_PROGRESS", "PENDING_HEAD_APPROVAL", "CLOSED", "REOPENED"];
+const STATUS_FILTERS = ["All", "ASSIGNED", "IN_PROGRESS", "EVIDENCE_SUBMITTED", "AUDITOR_VERIFIED", "PENDING_HEAD_APPROVAL", "CLOSED"];
 
 const columns: ColumnDef<NC>[] = [
   {
@@ -87,12 +88,18 @@ const columns: ColumnDef<NC>[] = [
 ];
 
 export function NCsClient() {
+  const { user } = usePersona();
   const [statusFilter, setStatusFilter] = useState("All");
+  const [filtered, setFiltered] = useState<NC[]>([]);
+  const [error, setError] = useState("");
 
-  const filtered = statusFilter === "All"
-    ? MOCK_NCS
-    : MOCK_NCS.filter((nc) => nc.status === statusFilter);
-
+  useEffect(() => {
+    setError("");
+    api
+      .ncList(statusFilter === "All" ? undefined : { status: statusFilter })
+      .then(setFiltered)
+      .catch((e) => setError(String(e)));
+  }, [statusFilter, user]);
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       <div className="flex items-center justify-between">

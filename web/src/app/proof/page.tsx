@@ -1,5 +1,4 @@
-import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Proof — Engine Performance" };
+"use client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 // Placeholder — real data from /api/eval/results once Hanu's eval/ lands

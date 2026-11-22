@@ -11,7 +11,9 @@ import {
 import { KpiTile } from "@/components/KpiTile";
 import { KpiSkeleton } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
-import { MOCK_KPI, MOCK_NCS } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { usePersona } from "@/lib/persona";
+import type { KPIOverview, NC } from "@/lib/types";
 import { formatDate, daysOverdue } from "@/lib/utils";
 import Link from "next/link";
 
@@ -23,13 +25,6 @@ const TREND_DATA = [
   { month: "Aug", open: 7, closed: 13, overdue: 2 },
   { month: "Sep", open: 10, closed: 11, overdue: 4 },
   { month: "Oct", open: 8, closed: 15, overdue: 3 },
-];
-
-const AGEING_DATA = [
-  { name: "0–7 days", value: MOCK_KPI.ageing.d0_7, color: "#10b981" },
-  { name: "8–14 days", value: MOCK_KPI.ageing.d8_14, color: "#f59e0b" },
-  { name: "15–30 days", value: MOCK_KPI.ageing.d15_30, color: "#ef4444" },
-  { name: "30+ days", value: MOCK_KPI.ageing.d30_plus, color: "#7f1d1d" },
 ];
 
 const EFFORT_DATA = [
@@ -51,16 +46,27 @@ const tooltipStyle = {
 };
 
 export function DashboardClient() {
-  const [loading, setLoading] = useState(true);
+  const { user } = usePersona();
+  const [kpi, setKpi] = useState<KPIOverview | null>(null);
+  const [recentNcs, setRecentNcs] = useState<NC[]>([]);
+  const [error, setError] = useState("");
+  const loading = false;
 
   useEffect(() => {
-    // Simulate API latency so skeleton is visible
-    const t = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(t);
-  }, []);
+    api.kpi().then(setKpi).catch((e) => setError(String(e)));
+    api.ncList().then((l) => setRecentNcs(l.slice(0, 5))).catch(() => {});
+  }, [user]);
 
-  const kpi = MOCK_KPI;
-  const recentNcs = MOCK_NCS.slice(0, 5);
+  if (!kpi) {
+    return <div className="p-6 text-slate-400">{error || "Loading real data..."}</div>;
+  }
+
+  const AGEING_DATA = [
+    { name: "0-7 days", value: kpi.ageing.d0_7, color: "#10b981" },
+    { name: "8-14 days", value: kpi.ageing.d8_14, color: "#f59e0b" },
+    { name: "15-30 days", value: kpi.ageing.d15_30, color: "#ef4444" },
+    { name: "30+ days", value: kpi.ageing.d30_plus, color: "#7f1d1d" },
+  ];
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
