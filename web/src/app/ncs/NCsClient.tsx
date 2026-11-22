@@ -94,10 +94,12 @@ export function NCsClient() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setError("");
     api
       .ncList(statusFilter === "All" ? undefined : { status: statusFilter })
-      .then(setFiltered)
+      .then((rows) => {
+        setFiltered(rows);
+        setError("");
+      })
       .catch((e) => setError(String(e)));
   }, [statusFilter, user]);
   return (
@@ -117,6 +119,12 @@ export function NCsClient() {
           Raise NC
         </button>
       </div>
+
+      {error && (
+        <p role="alert" className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs text-red-300">
+          Could not load non-conformances: {error}
+        </p>
+      )}
 
       {/* Status filter chips */}
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">

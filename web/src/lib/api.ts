@@ -50,7 +50,7 @@ export const api = {
   ncList: async (params?: { status?: string; severity?: string }) => {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
     const r = await get<{ total: number; items: import("./types").NC[] }>(`/api/ncs${qs ? `?${qs}` : ""}`);
-    return r.items;
+    return Array.isArray(r?.items) ? r.items : [];
   },
   ncDetail: (id: string) => get<any>(`/api/ncs/${id}`),
   ncRaise: (payload: Partial<import("./types").NC>) =>

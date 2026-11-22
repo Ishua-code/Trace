@@ -23,7 +23,7 @@ export function Header({ title }: HeaderProps) {
   const { resolvedTheme, setTheme } = useTheme();
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-slate-950/80 px-3 backdrop-blur sm:px-6">
+    <header className="relative z-50 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-white/5 bg-slate-950/80 px-3 backdrop-blur sm:px-6">
       {/* Page title */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <h1 className="hidden text-sm font-semibold text-slate-200 md:block">{title ?? "TRACE"}</h1>

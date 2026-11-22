@@ -2,6 +2,8 @@
 import { useCallback, useState } from "react";
 import {
   ReactFlow,
+  Handle,
+  Position,
   Background,
   Controls,
   MiniMap,
@@ -18,7 +20,6 @@ import "@xyflow/react/dist/style.css";
 import { MOCK_NCS, MOCK_CLOSURE_REPORT } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { tokens } from "@/lib/tokens";
-import { cn } from "@/lib/utils";
 import type { Link } from "@/lib/types";
 
 // ---- Colour by NC status ---------------------------------------------------
@@ -81,9 +82,10 @@ function NcNode({ data }: { data: { nc: (typeof MOCK_NCS)[0] } }) {
   const color = ncColor(nc.status);
   return (
     <div
-      className="rounded-xl border bg-slate-900 p-3 shadow-xl"
+      className="relative rounded-xl border bg-slate-900 p-3 shadow-xl"
       style={{ borderColor: color, minWidth: 160 }}
     >
+      <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border-2 !border-slate-950 !bg-electric" />
       <div className="flex items-center gap-2 mb-1.5">
         <span className="font-mono text-xs font-bold" style={{ color }}>
           {nc.id}
@@ -99,6 +101,7 @@ function NcNode({ data }: { data: { nc: (typeof MOCK_NCS)[0] } }) {
           {nc.status.replace(/_/g, " ")}
         </span>
       </div>
+      <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border-2 !border-slate-950 !bg-electric" />
     </div>
   );
 }
