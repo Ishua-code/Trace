@@ -1,247 +1,184 @@
 "use client";
-import { use } from "react";
-import { notFound } from "next/navigation";
+import { use, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft, Hash, Calendar, AlertTriangle, ExternalLink,
-  FileText, CheckCircle2, XCircle, Clock, Zap,
-} from "lucide-react";
-import { MOCK_NCS, MOCK_CLOSURE_REPORT, MOCK_AUDIT_LOG } from "@/lib/mock-data";
+import { ArrowLeft } from "lucide-react";
+import { api } from "@/lib/api";
+import { usePersona } from "@/lib/persona";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Timeline } from "@/components/Timeline";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 export default function NCDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const nc = MOCK_NCS.find((n) => n.id === decodeURIComponent(id));
-  if (!nc) notFound();
+  const { id: rawId } = use(params);
+  const id = decodeURIComponent(rawId);
+  const { user } = usePersona();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [d, setD] = useState<any>(null);
+  const [error, setError] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [text, setText] = useState("");
 
-  // Check if this NC has a closure report (golden scenario)
-  const hasReport = nc.id === "NC-0412";
-  const report = hasReport ? MOCK_CLOSURE_REPORT : null;
+  const load = useCallback(() => {
+    api.ncDetail(id).then(setD).catch((e) => setError(String(e)));
+  }, [id]);
 
-  const auditEvents = MOCK_AUDIT_LOG
-    .filter((e) => (e.payload.nc_id as string) === nc.id)
-    .map((e) => ({
-      id: e.index,
-      timestamp: e.created_at,
-      title: e.event_type.replace(/_/g, " "),
-      description: `Hash: ${e.hash.slice(0, 24)}…`,
-      variant:
-        e.event_type === "TRACE_VERDICT"
-          ? ("trace" as const)
-          : e.event_type === "HEAD_DECISION"
-          ? ("info" as const)
-          : e.event_type === "NC_RAISED"
-          ? ("warning" as const)
-          : ("default" as const),
-    }));
+  useEffect(() => { load(); }, [load, user]);
 
+  async function simulate() {
+    setBusy(true); setMsg("");
+    try {
+      await api.simulateClosure(id);
+      await load();
+    } catch (e) {
+      setMsg(String(e).includes("503")
+        ? "TRACE engine closure check is not ready yet (503)."
+        : String(e));
+    }
+    setBusy(false);
+  }
+
+  async function decide(decision: "approve" | "override" | "send_back") {
+    setBusy(true); setMsg("");
+    try {
+      await api.closureDecision(id, { decision, justification: text, reason: text });
+      setText("");
+      await load();
+      setMsg("Decision saved.");
+    } catch (e) {
+      setMsg(String(e));
+    }
+    setBusy(false);
+  }
+
+  async function doneTask(taskId: number) {
+    try { await api.completeTask(taskId); await load(); } catch (e) { setMsg(String(e)); }
+  }
+
+  if (!d) return <div className="p-6 text-slate-400">{error || "Loading..."}</div>;
+
+  const nc = d.nc;
+  const closure = d.closure;
+  const report = closure?.report ?? closure;
+  const verdict: string | undefined = report?.verdict;
+  const findings: any[] = report?.findings ?? [];
+  const tasks: any[] = report?.tasks ?? closure?.tasks ?? d.tasks ?? [];
+  const isHead = user.role === "auditing_head";
+  const canSimulate = nc.status !== "CLOSED" && (isHead || user.role === "admin" || user.role === "auditor");
+
+  const fields: [string, string][] = [
+    ["Product", nc.product], ["Process", nc.process], ["Line", nc.line ?? "-"],
+    ["Machine", nc.machine ?? "-"], ["Lot", nc.lot ?? "-"], ["Defect", nc.defect_code ?? "-"],
+    ["Root cause", nc.root_cause_category ?? "-"], ["Raised", formatDate(nc.raised_at)],
+    ["Target", nc.target_date ? formatDate(nc.target_date) : "-"],
+  ];
+
+  const box = "glass rounded-xl p-5";
   return (
-    <div className="flex flex-col gap-6 animate-fade-in">
-      {/* Back nav */}
+    <div className="flex flex-col gap-4 animate-fade-in">
+      <Link href="/ncs" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200">
+        <ArrowLeft size={12} /> Back to Non-Conformances
+      </Link>
+
       <div>
-        <Link
-          href="/ncs"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors mb-4"
-        >
-          <ArrowLeft size={12} /> Back to Non-Conformances
-        </Link>
+        <div className="flex items-center gap-3 mb-1">
+          <span className="font-mono text-2xl font-bold text-electric">{nc.id}</span>
+          <StatusBadge value={nc.severity} />
+          <StatusBadge value={nc.status} />
+        </div>
+        <h2 className="text-xl font-bold text-white">{nc.title}</h2>
+        <p className="mt-2 text-sm text-slate-300">{nc.description}</p>
+      </div>
 
-        <div className="flex flex-wrap items-start gap-4 justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <span className="font-mono text-2xl font-bold text-electric">{nc.id}</span>
-              <StatusBadge value={nc.severity} />
-              <StatusBadge value={nc.status} />
+      <div className={box}>
+        <h3 className="text-sm font-semibold text-slate-200 mb-3">Details</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {fields.map(([k, v]) => (
+            <div key={k}>
+              <div className="text-[10px] uppercase text-slate-500">{k}</div>
+              <div className="text-sm text-slate-200">{v}</div>
             </div>
-            <h2 className="text-xl font-bold text-white">{nc.title}</h2>
-          </div>
-
-          {/* Quick actions */}
-          <div className="flex gap-2 flex-wrap">
-            {nc.status === "PENDING_HEAD_APPROVAL" && (
-              <Link
-                href="/approvals"
-                className="flex items-center gap-2 rounded-lg bg-orange-500/10 border border-orange-500/30 px-4 py-2 text-sm font-medium text-orange-300 hover:bg-orange-500/20 transition-all"
-              >
-                <CheckCircle2 size={14} />
-                Review in Approvals
-              </Link>
-            )}
-            {hasReport && (
-              <Link
-                href="/graph"
-                className="flex items-center gap-2 rounded-lg bg-electric/10 border border-electric/30 px-4 py-2 text-sm font-medium text-electric hover:bg-electric/20 transition-all"
-              >
-                <Zap size={14} />
-                View TRACE Graph
-              </Link>
-            )}
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Main detail */}
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          {/* Description */}
-          <div className="glass rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-200 mb-3">Finding Description</h3>
-            <p className="text-sm text-slate-300 leading-relaxed">{nc.description}</p>
-          </div>
+      <div className={box}>
+        <h3 className="text-sm font-semibold text-slate-200 mb-3">Workflow record</h3>
+        <ul className="text-sm text-slate-300 flex flex-col gap-2">
+          {d.actions.map((a: any) => <li key={a.id}>Action plan: {a.corrective_action} (due {formatDate(a.target_date)})</li>)}
+          {d.evidence.map((e: any) => <li key={e.id}>Evidence: {e.file_name}</li>)}
+          {d.verifications.map((v: any) => <li key={v.id}>Auditor verification: {v.accepted ? "accepted" : "rejected"}. {v.comment}</li>)}
+        </ul>
+      </div>
 
-          {/* Metadata grid */}
-          <div className="glass rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-200 mb-4">Details</h3>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {[
-                { icon: <Hash size={12} />, label: "Product", value: nc.product },
-                { icon: <Hash size={12} />, label: "Process", value: nc.process },
-                { icon: <Hash size={12} />, label: "Line", value: nc.line ?? "—" },
-                { icon: <Hash size={12} />, label: "Audit Type", value: nc.audit_type },
-                { icon: <Hash size={12} />, label: "Machine", value: nc.machine ?? "—" },
-                { icon: <Hash size={12} />, label: "Lot", value: nc.lot ?? "—" },
-                { icon: <Hash size={12} />, label: "Defect Code", value: nc.defect_code ?? "—" },
-                { icon: <Hash size={12} />, label: "Root Cause", value: nc.root_cause_category ?? "—" },
-                { icon: <Calendar size={12} />, label: "Raised", value: formatDate(nc.raised_at) },
-                { icon: <Calendar size={12} />, label: "Target Date", value: nc.target_date ? formatDate(nc.target_date) : "—" },
-                { icon: <Calendar size={12} />, label: "Closed At", value: nc.closed_at ? formatDate(nc.closed_at) : "—" },
-              ].map((f) => (
-                <div key={f.label} className="flex flex-col gap-0.5">
-                  <span className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wide">
-                    {f.icon} {f.label}
-                  </span>
-                  <span className="text-sm font-medium text-slate-200">{f.value}</span>
+      <div className={box}>
+        <h3 className="text-sm font-semibold text-slate-200 mb-3">TRACE linked failures ({d.links.length})</h3>
+        <div className="flex flex-col gap-3">
+          {d.links.map((l: any) => {
+            const other = l.a === nc.id ? l.b : l.a;
+            const top = [...l.signals].filter((s: any) => s.contribution > 0.5)
+              .sort((x: any, y: any) => y.contribution - x.contribution).slice(0, 4);
+            return (
+              <div key={l.id} className="rounded-lg border border-white/5 bg-slate-800/40 p-3">
+                <div className="flex justify-between">
+                  <Link href={`/ncs/${other}`} className="font-mono text-xs font-bold text-electric hover:underline">{other}</Link>
+                  <span className="font-mono text-xs text-slate-200">{(l.score * 100).toFixed(1)}%</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* TRACE Closure Report — only for golden scenario */}
-          {report && (
-            <div className="glass rounded-xl p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-electric/20 ring-1 ring-electric/40">
-                  <span className="text-[10px] font-black text-electric">T</span>
-                </div>
-                <h3 className="text-sm font-semibold text-slate-200">TRACE Closure Risk Report</h3>
-                <StatusBadge value={report.verdict} className="ml-auto" />
+                <ul className="mt-2 text-[11px] text-slate-400 list-disc pl-4">
+                  {top.map((s: any) => <li key={s.name}>{s.evidence}</li>)}
+                </ul>
               </div>
+            );
+          })}
+        </div>
+      </div>
 
-              {/* Verdict banner */}
-              <div className={`flex items-start gap-3 rounded-xl border p-4 mb-4 ${
-                report.verdict === "HOLD"
-                  ? "border-red-500/40 bg-red-500/10 text-red-300 glow-hold"
-                  : report.verdict === "VERIFY"
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-300 glow-verify"
-                  : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 glow-clear"
-              }`}>
-                {report.verdict === "HOLD" ? <XCircle size={18} /> : report.verdict === "VERIFY" ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
-                <div>
-                  <p className="font-semibold">TRACE Verdict: {report.verdict}</p>
-                  <p className="text-sm opacity-80">
-                    {report.verdict === "HOLD"
-                      ? "Engine detected unresolved failure links. Review before approving."
-                      : report.verdict === "VERIFY"
-                      ? "Engine found concerns requiring verification before closure."
-                      : "Engine found no unresolved linked failures."}
-                  </p>
-                </div>
-              </div>
-
-              {/* Findings */}
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                Findings ({report.findings.length})
-              </h4>
-              <div className="flex flex-col gap-2 mb-4">
-                {report.findings.map((f) => (
-                  <div key={f.rule} className="flex gap-3 rounded-lg border border-white/5 bg-slate-800/40 p-3">
-                    <span className="shrink-0 font-mono text-xs font-bold text-electric mt-0.5">{f.rule}</span>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <StatusBadge value={f.severity} />
-                        <span className="text-xs text-slate-300">{f.message}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {f.evidence_refs.map((ref) => (
-                          <span key={ref} className="rounded bg-slate-700 px-1.5 py-0.5 font-mono text-[10px] text-electric">
-                            {ref}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Linked NCs */}
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                Linked NCs ({report.links.length})
-              </h4>
-              <div className="flex flex-col gap-2">
-                {report.links.map((link) => (
-                  <div key={link.id} className="flex items-center justify-between rounded-lg border border-white/5 bg-slate-800/40 p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-electric">{link.a}</span>
-                      <span className="text-slate-600">→</span>
-                      <span className="font-mono text-xs text-electric">{link.b}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs">
-                      <span className="font-mono font-semibold text-slate-200">{(link.score * 100).toFixed(0)}%</span>
-                      <Link href={`/graph?nc=${link.a}`} className="text-electric hover:underline flex items-center gap-1">
-                        Graph <ExternalLink size={10} />
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div className={box}>
+        <div className="mb-3 flex items-center gap-3">
+          <h3 className="text-sm font-semibold text-slate-200">Closure check</h3>
+          {verdict && <StatusBadge value={verdict} />}
+          {canSimulate && (
+            <button onClick={simulate} disabled={busy}
+              className="ml-auto rounded-lg bg-electric px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-50">
+              {busy ? "Working..." : closure ? "Re-run closure check" : "Simulate closure"}
+            </button>
           )}
         </div>
+        {msg && <p className="mb-3 text-xs text-amber-300">{msg}</p>}
+        {!closure && <p className="text-xs text-slate-500">No closure check run yet.</p>}
 
-        {/* Right sidebar */}
-        <div className="flex flex-col gap-4">
-          {/* Status card */}
-          <div className="glass rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-slate-200 mb-3">Status</h3>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">Current Status</span>
-                <StatusBadge value={nc.status} />
+        {findings.map((f, i) => (
+          <div key={i} className="mb-2 rounded-lg border border-white/5 bg-slate-800/40 p-3 text-xs text-slate-300">
+            <span className="mr-2 font-mono font-bold text-electric">{f.rule}</span>{f.message}
+          </div>
+        ))}
+
+        {tasks.length > 0 && (
+          <div className="mt-3">
+            <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">Verification tasks</h4>
+            {tasks.map((t) => (
+              <div key={t.id ?? t.title} className="mb-2 flex items-center justify-between rounded-lg border border-white/5 p-3 text-xs text-slate-300">
+                <span>{t.title}</span>
+                {t.done ? <span className="text-emerald-400">done</span> : (
+                  <button onClick={() => t.id && doneTask(t.id)} className="text-electric hover:underline">Mark done</button>
+                )}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">Severity</span>
-                <StatusBadge value={nc.severity} />
-              </div>
-              {nc.target_date && (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-xs text-slate-500">
-                    <Clock size={10} /> Target
-                  </span>
-                  <span className="text-xs font-medium text-slate-200">{formatDate(nc.target_date)}</span>
-                </div>
-              )}
+            ))}
+          </div>
+        )}
+
+        {isHead && closure && nc.status !== "CLOSED" && (
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">Head decision</h4>
+            <textarea value={text} onChange={(e) => setText(e.target.value)}
+              placeholder="Type the justification or reason (at least 15 characters for override)"
+              className="w-full rounded-lg border border-white/10 bg-slate-900 p-2 text-sm text-slate-200" rows={3} />
+            <div className="mt-2 flex gap-2">
+              <button disabled={busy} onClick={() => decide("approve")} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50">Approve</button>
+              <button disabled={busy || text.trim().length < 15} onClick={() => decide("override")} className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50">Override and close</button>
+              <button disabled={busy || !text.trim()} onClick={() => decide("send_back")} className="rounded-lg bg-slate-600 px-3 py-2 text-sm text-white disabled:opacity-50">Send back</button>
             </div>
           </div>
-
-          {/* Event log timeline */}
-          {auditEvents.length > 0 && (
-            <div className="glass rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                <FileText size={14} className="text-electric" />
-                Event Timeline
-              </h3>
-              <Timeline events={auditEvents} />
-              <Link
-                href="/audit-log"
-                className="mt-4 inline-flex items-center gap-1 text-xs text-electric hover:underline"
-              >
-                Full audit log <ExternalLink size={10} />
-              </Link>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
